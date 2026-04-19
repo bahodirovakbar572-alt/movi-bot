@@ -1,7 +1,11 @@
 const { Telegraf, Markup } = require('telegraf');
 const path = require('path');
 const fs = require('fs');
+const http = require('http'); // Port uchun kerak
 require('dotenv').config();
+
+// Port sozlamasi
+const PORT = 7777;
 
 // Tokenni shu yerga qo'ying (yoki .env dan oling)
 const bot = new Telegraf('8695736758:AAEnpkPEvlktCZemLXgHXjaIs5hDsWbdbQ4'); 
@@ -59,6 +63,14 @@ bot.action('verify', async (ctx) => {
     } else {
         await ctx.answerCbQuery("❌ A'zo emassiz!", { show_alert: true });
     }
+});
+
+// Portni band qilish va botni ishga tushirish
+http.createServer((req, res) => {
+    res.writeHead(200);
+    res.end('Bot is running');
+}).listen(PORT, () => {
+    console.log(`Server ${PORT}-portda ishlamoqda`);
 });
 
 bot.launch();
