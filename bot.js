@@ -80,3 +80,9 @@ http.createServer((req, res) => {
 
 bot.launch();
 console.log('Bot muvaffaqiyatli ishga tushdi!');
+
+
+
+
+
+// git add . && git commit -m "update" && git push
