@@ -1,18 +1,21 @@
 const { Telegraf, Markup } = require('telegraf');
-const path = require('path');
-const fs = require('fs');
-const http = require('http'); // Port uchun kerak
+const http = require('http');
+const fs = require('fs'); // Fayllarni o'qish uchun
 require('dotenv').config();
 
-// Port sozlamasi
 const PORT = 7777;
+const bot = new Telegraf('8695736758:AAEnpkPEvlktCZemLXgHXjaIs5hDsWbdbQ4');
 
-// Tokenni shu yerga qo'ying (yoki .env dan oling)
-const bot = new Telegraf('8695736758:AAEnpkPEvlktCZemLXgHXjaIs5hDsWbdbQ4'); 
-
-const movieDatabase = [
-    { code: '1', fileName: '1.mp4', title: 'Qasoskorlar' }
-];
+// JSON fayldan ma'lumotlarni o'qish funksiyasi
+function getMovies() {
+    try {
+        const data = fs.readFileSync('./movie.json', 'utf8');
+        return JSON.parse(data);
+    } catch (err) {
+        console.error("JSON o'qishda xato:", err);
+        return [];
+    }
+}
 
 const CHANNEL_ID = '@infortx_movichanel';
 
@@ -27,7 +30,6 @@ async function checkSub(ctx) {
 
 bot.start(async (ctx) => {
     const subscribed = await checkSub(ctx);
-    
     if (!subscribed) {
         return ctx.reply(
             `👋 Salom! Botdan foydalanish uchun kanalga a'zo bo'ling.`,
@@ -42,17 +44,20 @@ bot.start(async (ctx) => {
 
 bot.on('text', async (ctx) => {
     if (ctx.message.text === '/start') return;
-    
+
+    // Har gal xabar kelganda JSON dan oxirgi ma'lumotlarni olamiz
+    const movieDatabase = getMovies();
     const movie = movieDatabase.find(m => m.code === ctx.message.text);
+
     if (movie) {
-        const videoPath = path.join(__dirname, 'movie', movie.fileName);
-        if (fs.existsSync(videoPath)) {
-            await ctx.replyWithVideo({ source: videoPath }, { caption: movie.title });
-        } else {
-            ctx.reply('❌ Video topilmadi.');
+        try {
+            await ctx.replyWithVideo(movie.url, { caption: movie.title });
+        } catch (error) {
+            console.error('Video yuborishda xato:', error);
+            ctx.reply('❌ Video yuborishda xatolik yuz berdi.');
         }
     } else {
-        ctx.reply('❌ Kod noto\'g\'ri.');
+        ctx.reply('❌ Bunday kodli kino topilmadi.');
     }
 });
 
@@ -65,7 +70,7 @@ bot.action('verify', async (ctx) => {
     }
 });
 
-// Portni band qilish va botni ishga tushirish
+// Portni band qilish
 http.createServer((req, res) => {
     res.writeHead(200);
     res.end('Bot is running');
@@ -74,4 +79,4 @@ http.createServer((req, res) => {
 });
 
 bot.launch();
-console.log('Bot muvaffaqiyatli ishladi!');
+console.log('Bot muvaffaqiyatli ishga tushdi!');
